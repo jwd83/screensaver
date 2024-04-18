@@ -1,5 +1,8 @@
 {
     "font": "dealerplate california.otf",
     "fontSize": 250,
-    "fps": 60
+    "fps": 60,
+    "tenths_or_hundredths": "hundredths",
+    "space_doubling": 2,
+    "tick_thickness_divider": 10
 }
