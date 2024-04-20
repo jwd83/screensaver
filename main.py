@@ -160,11 +160,23 @@ while True:
             font_color,
         )
     else:
-        text_sun = font_small.render(
-            f"Sunset @ {time.strftime('%I:%M %p', time.localtime(owm.sunset))}",
-            True,
-            font_color,
-        )
+        # if it's before sunset display the time of sunset
+        if current_time < owm.sunset:
+            text_sun = font_small.render(
+                f"Sunset @ {time.strftime('%I:%M %p', time.localtime(owm.sunset))}",
+                True,
+                font_color,
+            )
+        else:
+            # if it's after sunset display the time of sunrise
+            # minor bug: this will be slightly wrong until the next owm update after midnight
+            # as it's the current day's sunrise
+
+            text_sun = font_small.render(
+                f"Sunset @ {time.strftime('%I:%M %p', time.localtime(owm.sunset))}",
+                True,
+                font_color,
+            )
 
     # DRAW TO THE SCREEN
 
