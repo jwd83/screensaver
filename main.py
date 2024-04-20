@@ -3,9 +3,18 @@ import json
 import time
 import math
 from weather import OpenWeatherMap
+from cex import CEX
+
+
+def format_usd(value):
+    return f"${value:,.2f}"
+
 
 owm = OpenWeatherMap()
 owm.update()
+
+cex = CEX()
+cex.update()
 
 # load the settings.json into a settings object
 with open("settings.json") as json_file:
@@ -67,6 +76,9 @@ height_am_pm = text_am_pm.get_height()
 while True:
     # update the weather as needed
     owm.update()
+
+    # update BTC as needed
+    cex.update()
 
     # get the current unix time in seconds
     current_time = time.time()
@@ -141,6 +153,9 @@ while True:
         f"Feels like {int(owm.current_feels_like)}°F", True, font_color
     )
 
+    text_btc_usd = font_tiny.render(f"BTC {format_usd(cex.btc_usd)}", True, font_color)
+    text_btc_chg = font_tiny.render(f"{cex.pct_chg}", True, font_color)
+
     # pressure and humidity and wind
     if owm.wind_speed == owm.wind_gust:
         t_wind = f"wind {int(owm.wind_speed)}"
@@ -201,11 +216,15 @@ while True:
         ),
     )
 
-    # draw the day of the week at the top left
-    screen.blit(text_day_of_week, (0, height_hundredths))
-
-    # draw the day month and year directly below the day of the week
+    # top left
+    # draw the date (ex. may 1, 2024)
+    # draw the day of the week (ex. Monday)
+    # draw the btc price
+    # draw the btc price change
     screen.blit(text_day_month_year, (0, 0))
+    screen.blit(text_day_of_week, (0, height_hundredths))
+    screen.blit(text_btc_usd, (0, height_hundredths * 2))
+    screen.blit(text_btc_chg, (0, height_hundredths * 2 + height_tiny))
 
     # draw the feels like temperature above the weather in the bottom left
     screen.blit(

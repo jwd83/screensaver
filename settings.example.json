@@ -8,5 +8,6 @@
     "openweathermap_api_key": "YOUR_API_KEY",
     "openweathermap_lat": "37.0",
     "openweathermap_lon": "-77.0",
-    "openweathermap_update_minutes": "5"
+    "openweathermap_update_minutes": "5",
+    "cex_update_minutes": "1"
 }
