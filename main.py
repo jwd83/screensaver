@@ -126,9 +126,16 @@ while True:
     day_month_year = time.strftime("%B %d, %Y")
     text_day_month_year = small_font.render(day_month_year, True, font_color)
 
-    # weather
+    # temperature and weather
     text_weather = small_font.render(
         f"{owm.weather_description} @ {int(owm.current_temperature)}°F",
+        True,
+        font_color,
+    )
+
+    # pressure and humidity
+    text_pressure_humidity = small_font.render(
+        f"{int(owm.current_pressure)} hPa, {int(owm.current_humidity)}% humidity",
         True,
         font_color,
     )
@@ -140,6 +147,7 @@ while True:
         text_time,
         ((screen_size[0] - width_time) // 2, (screen_size[1] - height_time) // 2),
     )
+
     screen.blit(
         text_hundredths,
         (
@@ -162,7 +170,13 @@ while True:
     screen.blit(text_day_month_year, (0, height_hundredths))
 
     # draw the weather at the bottom left
-    screen.blit(text_weather, (0, screen_size[1] - height_hundredths))
+    screen.blit(text_weather, (0, screen_size[1] - height_hundredths * 2))
+
+    # draw the pressure and humidity at the bottom left below weather
+    screen.blit(
+        text_pressure_humidity,
+        (0, screen_size[1] - height_hundredths),
+    )
 
     # draw the week number at the top right
     screen.blit(text_week_number, (screen_size[0] - text_week_number.get_width(), 0))
