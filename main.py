@@ -3,15 +3,15 @@ import json
 import time
 import math
 from weather import OpenWeatherMap
-from cex import CEX
+from blockchaininfo import BCI
 import threading
 
 
 def update_data():
     owm_thread = threading.Thread(target=owm.update)
-    cex_thread = threading.Thread(target=cex.update)
+    bci_thread = threading.Thread(target=bci.update)
     owm_thread.start()
-    cex_thread.start()
+    bci_thread.start()
 
 
 def format_usd(value):
@@ -19,13 +19,10 @@ def format_usd(value):
 
 
 owm = OpenWeatherMap()
-cex = CEX()
+bci = BCI()
 
 
 update_data()
-
-# owm.update()
-# cex.update()
 
 # load the settings.json into a settings object
 with open("settings.json") as json_file:
@@ -160,8 +157,7 @@ while True:
         f"Feels like {int(owm.current_feels_like)}°F", True, font_color
     )
 
-    text_btc_usd = font_tiny.render(f"BTC {format_usd(cex.btc_usd)}", True, font_color)
-    text_btc_chg = font_tiny.render(f"{cex.pct_chg}", True, font_color)
+    text_btc_usd = font_tiny.render(f"BTC {format_usd(bci.btc_usd)}", True, font_color)
 
     # pressure and humidity and wind
     if owm.wind_speed == owm.wind_gust:
@@ -231,7 +227,7 @@ while True:
     screen.blit(text_day_month_year, (0, 0))
     screen.blit(text_day_of_week, (0, height_hundredths))
     screen.blit(text_btc_usd, (0, height_hundredths * 2))
-    screen.blit(text_btc_chg, (0, height_hundredths * 2 + height_tiny))
+    # screen.blit(text_btc_chg, (0, height_hundredths * 2 + height_tiny))
 
     # draw the feels like temperature above the weather in the bottom left
     screen.blit(
