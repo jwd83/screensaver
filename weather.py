@@ -28,14 +28,7 @@ class OpenWeatherMap:
     def update(self):
 
         if time.time() - self.last_update < self.update_interval:
-            print(
-                "Skipping update for another "
-                + str(self.update_interval - (time.time() - self.last_update))
-                + " seconds."
-            )
             return
-        else:
-            print("Updating")
 
         self.last_update = time.time()
 
