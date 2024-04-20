@@ -4,6 +4,14 @@ import time
 import math
 from weather import OpenWeatherMap
 from cex import CEX
+import threading
+
+
+def update_data():
+    owm_thread = threading.Thread(target=owm.update)
+    cex_thread = threading.Thread(target=cex.update)
+    owm_thread.start()
+    cex_thread.start()
 
 
 def format_usd(value):
@@ -11,10 +19,13 @@ def format_usd(value):
 
 
 owm = OpenWeatherMap()
-owm.update()
-
 cex = CEX()
-cex.update()
+
+
+update_data()
+
+# owm.update()
+# cex.update()
 
 # load the settings.json into a settings object
 with open("settings.json") as json_file:
@@ -74,11 +85,7 @@ height_am_pm = text_am_pm.get_height()
 
 
 while True:
-    # update the weather as needed
-    owm.update()
-
-    # update BTC as needed
-    cex.update()
+    update_data()
 
     # get the current unix time in seconds
     current_time = time.time()
