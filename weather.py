@@ -21,9 +21,16 @@ class OpenWeatherMap:
         self.last_update = 0
 
         self.current_temperature = 0
+        self.current_feels_like = 0
         self.current_pressure = 0
         self.current_humidity = 0
         self.weather_description = ""
+        self.wind_speed = 0
+        self.wind_gust = 0
+        self.wind_direction = 0
+        self.visibility = 0
+        self.sunrise = 0
+        self.sunset = 0
 
     def update(self):
 
@@ -39,6 +46,7 @@ class OpenWeatherMap:
         complete_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={key}"
         response = requests.get(complete_url)
         x = response.json()
+        print(x)
 
         if x["cod"] != "404":
 
@@ -49,6 +57,7 @@ class OpenWeatherMap:
             # store the value corresponding
             # to the "temp" key of y
             self.current_temperature = self.kelvin_to_fahrenheit(y["temp"])
+            self.current_feels_like = self.kelvin_to_fahrenheit(y["feels_like"])
 
             # store the value corresponding
             # to the "pressure" key of y
@@ -67,6 +76,17 @@ class OpenWeatherMap:
             # the 0th index of z
             self.weather_description = z[0]["description"]
 
+            self.sunrise = x["sys"]["sunrise"]
+            self.sunset = x["sys"]["sunset"]
+
+            self.wind_speed = self.meters_per_second_to_mph(x["wind"]["speed"])
+            self.wind_direction = x["wind"]["deg"]
+
+            if "gust" in x["wind"]:
+                self.wind_gust = self.meters_per_second_to_mph(x["wind"]["gust"])
+            else:
+                self.wind_gust = self.wind_speed
+
             # print following values
             print(
                 " Temperature (in fahrenheit unit) = "
@@ -84,6 +104,9 @@ class OpenWeatherMap:
 
     def kelvin_to_fahrenheit(self, kelvin):
         return (kelvin - 273.15) * 9 / 5 + 32
+
+    def meters_per_second_to_mph(self, mps):
+        return mps * 2.23694
 
 
 def main():

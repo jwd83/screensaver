@@ -43,12 +43,16 @@ pygame.display.set_caption("Binary Dragon Screen Saver")
 # load the font Bakemono-Stereo-Extrabold-trial.ttf
 font = pygame.font.Font(settings["font"], settings["fontSize"])
 
-small_font = pygame.font.Font(settings["font"], settings["fontSize"] // 2)
+font_small = pygame.font.Font(settings["font"], settings["fontSize"] // 2)
+font_tiny = pygame.font.Font(settings["font"], settings["fontSize"] // 4)
 
-# calcuate the size of the text we are going to render once so small variations in "fixed" size fonts don't cause the text to move around
+# calculate the size of the text we are going to render once so small variations in "fixed" size fonts don't cause the text to move around
 text_time = font.render("55:55:55", True, font_color)
-text_hundredths = small_font.render("55", True, font_color)
+text_hundredths = font_small.render("55", True, font_color)
 text_am_pm = font.render("AM", True, font_color)
+
+text_tiny = font_tiny.render("55", True, font_color)
+height_tiny = text_tiny.get_height()
 
 width_time = text_time.get_width()
 height_time = text_time.get_height()
@@ -102,13 +106,13 @@ while True:
     if settings["tenths_or_hundredths"] == "tenths":
 
         # create text of the hundredths of a second from the tenths instead
-        text_hundredths = small_font.render(tenths, True, font_color)
+        text_hundredths = font_small.render(tenths, True, font_color)
 
     else:
         if len(hundredths) == 1:
             hundredths = "0" + hundredths
         # create text of the hundredths of a second
-        text_hundredths = small_font.render(hundredths, True, font_color)
+        text_hundredths = font_small.render(hundredths, True, font_color)
 
     # AM/PM
     am_pm = time.strftime(" %p")
@@ -116,29 +120,51 @@ while True:
 
     # day of the week
     day_of_week = time.strftime("%A")
-    text_day_of_week = small_font.render(day_of_week, True, font_color)
+    text_day_of_week = font_small.render(day_of_week, True, font_color)
 
     # ISO week number
     week_number = time.strftime("Week %U")
-    text_week_number = small_font.render(week_number, True, font_color)
+    text_week_number = font_small.render(week_number, True, font_color)
 
     # day month and year
     day_month_year = time.strftime("%B %d, %Y")
-    text_day_month_year = small_font.render(day_month_year, True, font_color)
+    text_day_month_year = font_small.render(day_month_year, True, font_color)
 
     # temperature and weather
-    text_weather = small_font.render(
+    text_weather = font_small.render(
         f"{owm.weather_description} @ {int(owm.current_temperature)}°F",
         True,
         font_color,
     )
 
-    # pressure and humidity
-    text_pressure_humidity = small_font.render(
-        f"{int(owm.current_pressure)} hPa, {int(owm.current_humidity)}% humidity",
+    text_feels_like = font_tiny.render(
+        f"Feels like {int(owm.current_feels_like)}°F", True, font_color
+    )
+
+    # pressure and humidity and wind
+    if owm.wind_speed == owm.wind_gust:
+        t_wind = f"wind {int(owm.wind_speed)}"
+    else:
+        t_wind = f"wind {int(owm.wind_speed)}-{int(owm.wind_gust)}"
+    text_pressure_humidity = font_small.render(
+        f"{t_wind}, {int(owm.current_pressure)} hPa, {int(owm.current_humidity)}% hum",
         True,
         font_color,
     )
+
+    # if it's before sunrise display the time of sunrise
+    if current_time < owm.sunrise:
+        text_sun = font_small.render(
+            f"Sunrise @ {time.strftime('%I:%M %p', time.localtime(owm.sunrise))}",
+            True,
+            font_color,
+        )
+    else:
+        text_sun = font_small.render(
+            f"Sunset @ {time.strftime('%I:%M %p', time.localtime(owm.sunset))}",
+            True,
+            font_color,
+        )
 
     # DRAW TO THE SCREEN
 
@@ -164,10 +190,19 @@ while True:
     )
 
     # draw the day of the week at the top left
-    screen.blit(text_day_of_week, (0, 0))
+    screen.blit(text_day_of_week, (0, height_hundredths))
 
     # draw the day month and year directly below the day of the week
-    screen.blit(text_day_month_year, (0, height_hundredths))
+    screen.blit(text_day_month_year, (0, 0))
+
+    # draw the feels like temperature above the weather in the bottom left
+    screen.blit(
+        text_feels_like,
+        (
+            0,
+            screen_size[1] - height_hundredths * 2 - height_tiny,
+        ),
+    )
 
     # draw the weather at the bottom left
     screen.blit(text_weather, (0, screen_size[1] - height_hundredths * 2))
@@ -178,8 +213,13 @@ while True:
         (0, screen_size[1] - height_hundredths),
     )
 
-    # draw the week number at the top right
-    screen.blit(text_week_number, (screen_size[0] - text_week_number.get_width(), 0))
+    # draw the sunrise or sunset time and the week number at the top right
+    screen.blit(
+        text_week_number,
+        (screen_size[0] - text_week_number.get_width(), 0),
+    )
+
+    screen.blit(text_sun, (screen_size[0] - text_sun.get_width(), height_hundredths))
 
     # draw the tenth's gauge
     for i in range(9):
@@ -196,48 +236,22 @@ while True:
         )
 
         # default to disabled color
-        draw_color = (50, 50, 50)
+        draw_color = (33, 33, 33)
 
         # check if active
         if int(tenths) > i:
-            draw_color = font_color
+            scaler = (i + 20) / 30
+            draw_color = (
+                font_color[0] * scaler,
+                font_color[1] * scaler,
+                font_color[2] * scaler,
+            )
+
             # pygame.draw.arc(screen, font_color, (screen_size[0] // 2 - 50, screen_size[1] // 2 - 50, 100, 100), i * 40, (i + 1) * 40, 5)
         # draw the segment
         pygame.draw.arc(
             screen, draw_color, draw_at, start_angle, stop_angle, angle_width
         )
-
-    # # draw a circle divided up into 9 regions for tenths of a second. all will be dim at 0 and each segment will light up when it's tenth
-    # # has passed. This will be a visual representation of the tenths of a second.
-    # segments = 99
-
-    # for i in range(segments):
-    #     start_angle = i / segments * 2 * 3.14159
-    #     stop_angle = (i+1) / segments * 2 * 3.14159
-    #     angle_width = settings['fontSize'] // int(settings['tick_thickness_divider'])
-    #     draw_at = (
-    #         (screen_size[0] - width_time) // 2 + width_time + settings['fontSize'] // 20,
-    #         (screen_size[1] - height_time) // 2 + height_hundredths - settings['fontSize'] // 6,
-    #         settings['fontSize'] // 4,
-    #         settings['fontSize'] // 4
-    #     )
-
-    #     # default to disabled color
-    #     draw_color = (80, 80, 80)
-
-    #     # check if active
-    #     if int(hundredths)  > i:
-    #         draw_color = font_color
-
-    #     # draw the segment
-    #     pygame.draw.arc(
-    #         screen,
-    #         draw_color,
-    #         draw_at,
-    #         start_angle,
-    #         stop_angle,
-    #         angle_width
-    #     )
 
     pygame.display.flip()
 
