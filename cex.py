@@ -11,11 +11,12 @@ class CEX:
             settings = json.load(json_file)
 
         self.btc_usd = 0
+        self.last_btc_usd = 0
         self.pct_chg = "-0%"
         self.last_update = 0
         self.update_interval = float(settings["cex_update_minutes"]) * 60
-        if self.update_interval < 60:
-            self.update_interval = 60
+        if self.update_interval < 1:
+            self.update_interval = 1
 
     def update(self):
 
@@ -30,8 +31,11 @@ class CEX:
         response = requests.get(complete_url)
         x = response.json()
         print(x)
-
-        self.btc_usd = float(x["last"])
+        last_backup = self.last_btc_usd
+        self.last_btc_usd = self.btc_usd
+        self.btc_usd = (float(x["bid"]) + float(x["ask"])) / 2
+        if self.btc_usd == self.last_btc_usd:
+            self.last_btc_usd = last_backup
         self.pct_chg = x["priceChangePercentage"] + "%"
 
 
