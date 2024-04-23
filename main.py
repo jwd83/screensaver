@@ -3,15 +3,18 @@ import json
 import time
 import math
 from weather import OpenWeatherMap
-from blockchaininfo import BCI
+# from blockchaininfo import BCI
+from cex import CEX
 import threading
 
 
 def update_data():
     owm_thread = threading.Thread(target=owm.update)
-    bci_thread = threading.Thread(target=bci.update)
+    # bci_thread = threading.Thread(target=bci.update)
+    cex_thread = threading.Thread(target=cex.update)
     owm_thread.start()
-    bci_thread.start()
+    # bci_thread.start()
+    cex_thread.start()
 
 
 def format_usd(value):
@@ -19,7 +22,8 @@ def format_usd(value):
 
 
 owm = OpenWeatherMap()
-bci = BCI()
+# bci = BCI()
+cex = CEX()
 
 
 update_data()
@@ -88,9 +92,9 @@ while True:
     current_time = time.time()
 
     font_color = (
-        150 + math.sin(current_time / 2) * 100,
-        150 + math.sin(current_time / 3) * 100,
-        150 + math.sin(current_time / 4) * 100,
+        200 + math.sin(current_time / 2) * 50,
+        200 + math.sin(current_time / 3) * 50,
+        200 + math.sin(current_time / 4) * 50,
     )
 
     # fill the screen with black
@@ -157,7 +161,12 @@ while True:
         f"Feels like {int(owm.current_feels_like)}°F", True, font_color
     )
 
-    text_btc_usd = font_tiny.render(f"BTC {format_usd(bci.btc_usd)}", True, font_color)
+    text_btc_usd = font_tiny.render(f"BTC {format_usd(cex.btc_usd)}", True, font_color)
+    btc_movement = cex.btc_usd - cex.last_btc_usd
+    if btc_movement < 0:
+        text_btc_chg = font_tiny.render(f"-{format_usd(btc_movement*-1)}", True, font_color)
+    else:
+        text_btc_chg = font_tiny.render(f"+{format_usd(btc_movement)}", True, font_color)
 
     # pressure and humidity and wind
     if owm.wind_speed == owm.wind_gust:
@@ -165,36 +174,42 @@ while True:
     else:
         t_wind = f"wind {int(owm.wind_speed)}-{int(owm.wind_gust)}"
     text_pressure_humidity = font_small.render(
-        f"{t_wind}, {int(owm.current_pressure)} hPa, {int(owm.current_humidity)}% hum",
+        f"{t_wind}, {int(owm.current_pressure)} mbar, {int(owm.current_humidity)}% hum",
         True,
         font_color,
     )
 
+    # determine if we will show sunrise or sunset
+    show_sunrise = False
+
     # if it's before sunrise display the time of sunrise
     if current_time < owm.sunrise:
+        show_sunrise = True
+    else:
+        if current_time < owm.sunset:
+            # if it's before sunset display the time of sunset
+            show_sunrise = False
+
+        else:
+            # if it's after sunset display the time of sunrise
+            # minor bug: this will be slightly wrong until the next owm update after midnight
+            # as it's the current day's sunrise
+            show_sunrise = True
+
+
+
+    if show_sunrise:
         text_sun = font_small.render(
             f"Sunrise @ {time.strftime('%I:%M %p', time.localtime(owm.sunrise))}",
             True,
             font_color,
         )
     else:
-        # if it's before sunset display the time of sunset
-        if current_time < owm.sunset:
-            text_sun = font_small.render(
-                f"Sunset @ {time.strftime('%I:%M %p', time.localtime(owm.sunset))}",
-                True,
-                font_color,
-            )
-        else:
-            # if it's after sunset display the time of sunrise
-            # minor bug: this will be slightly wrong until the next owm update after midnight
-            # as it's the current day's sunrise
-
-            text_sun = font_small.render(
-                f"Sunset @ {time.strftime('%I:%M %p', time.localtime(owm.sunset))}",
-                True,
-                font_color,
-            )
+        text_sun = font_small.render(
+            f"Sunset @ {time.strftime('%I:%M %p', time.localtime(owm.sunset))}",
+            True,
+            font_color,
+        )
 
     # DRAW TO THE SCREEN
 
@@ -227,7 +242,7 @@ while True:
     screen.blit(text_day_month_year, (0, 0))
     screen.blit(text_day_of_week, (0, height_hundredths))
     screen.blit(text_btc_usd, (0, height_hundredths * 2))
-    # screen.blit(text_btc_chg, (0, height_hundredths * 2 + height_tiny))
+    screen.blit(text_btc_chg, (0, height_hundredths * 2 + height_tiny))
 
     # draw the feels like temperature above the weather in the bottom left
     screen.blit(
