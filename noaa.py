@@ -15,7 +15,7 @@ import json
 
 
 class NOAA:
-    def __init__(self, cooldown=60, verbose_enabled=False, lat=None, lon=None):
+    def __init__(self, cooldown=60, verbose_enabled=False, lat=None, lon=None, logging_enabled=False):
 
         with open("settings.json") as json_file:
             settings = json.load(json_file)
@@ -34,6 +34,7 @@ class NOAA:
 
         self.cooldown = int(cooldown)
         self.verbose_enabled = bool(verbose_enabled)
+        self.logging_enabled = bool(logging_enabled)
         self.last_update = 0
         if self.cooldown < 1:
             self.cooldown = 1
@@ -86,17 +87,33 @@ class NOAA:
         # pretty print the forecast hourly data
         self.verbose(json.dumps(self.forecast_hourly_data, indent=4))
 
+        if self.logging_enabled:
+            self.__log_data()
+
+    def __log_data(self):
+        # write the dumps too noaa-point.json
+        with open("noaa-point.json", "w") as file:
+            json.dump(self.points_data, file, indent=4)
+
+        with open("noaa-forecast.json", "w") as file:
+            json.dump(self.forecast_data, file, indent=4)
+
+        with open("noaa-forecast-hourly.json", "w") as file:
+            json.dump(self.forecast_hourly_data, file, indent=4)
+
+
     def verbose(self, str: str):
         if self.verbose_enabled:
             print(str)
 
 
 if __name__ == "__main__":
-    noaa = NOAA(verbose_enabled=True)
+    noaa = NOAA(verbose_enabled=True, logging_enabled=True)
     noaa.update()
     print("Current Weather Conditions ")
     print(noaa.forecast_data["properties"]["periods"][0]["detailedForecast"])
     print("Hourly Forecast")
+
     for period in noaa.forecast_hourly_data["properties"]["periods"]:
         print(
             f"{period['startTime']} to {period['endTime']} {period['temperature']}F {period['shortForecast']}"
