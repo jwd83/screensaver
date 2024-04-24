@@ -3,9 +3,11 @@
         "blit",
         "blockchaininfo",
         "cooldown",
+        "mbar",
         "mktime",
         "MOUSEBUTTONDOWN",
         "NOAA",
-        "openweathermap"
+        "openweathermap",
+        "shortcast"
     ]
 }
