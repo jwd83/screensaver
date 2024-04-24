@@ -107,22 +107,42 @@ def main():
 
         screen.fill((0, 0, 0))
 
+        t_wind = ""
+        t_humidity = ""
+
         # draw the 24 hour temperature plot behind the text
         if noaa.forecast_hourly_data is not None:
-            # pull out the first 24 periods of data
 
-            hourly_forecast_data = noaa.get_hourly_temperatures()[:24]
+            forecast_now = noaa.get_current_hourly_forecast()
+            hourly_temperatures = noaa.get_hourly_temperatures()[:24]
+            hourly_rain_chances = noaa.get_hourly_rain_chances()[:24]
+
+            t_wind = f"wind {forecast_now['windSpeed']} {forecast_now['windDirection']}"
+            t_humidity = f"{forecast_now['relativeHumidity']['value']}% RH"
+            t_rain = (
+                f"{forecast_now['probabilityOfPrecipitation']['value']}% chance of rain"
+            )
 
             # get the min and max temperatures
-            min_temp = min(hourly_forecast_data)
-            max_temp = max(hourly_forecast_data)
+            min_temp = min(hourly_temperatures)
+            max_temp = max(hourly_temperatures)
 
             plot_line(
-                hourly_forecast_data,
+                hourly_temperatures,
                 screen_size=screen_size,
                 screen=screen,
                 color=(255, 0, 0),
                 thickness=2,
+            )
+
+            plot_line(
+                hourly_rain_chances,
+                screen_size=screen_size,
+                screen=screen,
+                color=(0, 0, 255),
+                thickness=2,
+                custom_max=100,
+                custom_min=0,
             )
 
         # MAIN TIME ( H:MM:SS)
@@ -182,14 +202,13 @@ def main():
         ti = f"{ti:.3f}"
 
         text_weather = font_small.render(
-            # f"{owm.weather_description} @ {int(owm.current_temperature)}°F",
             f"{owm.weather_description} @ {ti}°F",
             True,
             font_color,
         )
 
         text_feels_like = font_tiny.render(
-            f"Feels like {int(owm.current_feels_like)}°F, Range: {min_temp}-{max_temp} °F",
+            f"Feels like {int(owm.current_feels_like)}°F, Upcoming 24 H: {min_temp}-{max_temp} °F, {t_rain}",
             True,
             font_color,
         )
@@ -207,13 +226,8 @@ def main():
                 f"+{format_usd(btc_movement)}", True, font_color
             )
 
-        # pressure and humidity and wind
-        if owm.wind_speed == owm.wind_gust:
-            t_wind = f"wind {int(owm.wind_speed)}"
-        else:
-            t_wind = f"wind {int(owm.wind_speed)}-{int(owm.wind_gust)}"
         text_pressure_humidity = font_small.render(
-            f"{t_wind}, {int(owm.current_pressure)} mbar, {int(owm.current_humidity)}% hum",
+            f"{t_wind}, {int(owm.current_pressure)} mbar, {t_humidity}",
             True,
             font_color,
         )
@@ -360,12 +374,23 @@ def main():
                 exit()
 
 
-def plot_line(data, screen_size, screen, color, thickness):
+def plot_line(
+    data, screen_size, screen, color, thickness, custom_max=None, custom_min=None
+):
 
     # get the min and max temperatures
-    min_range = min(data)
-    max_range = max(data)
+    if custom_max is not None:
+        max_range = custom_max
+    else:
+        max_range = max(data)
 
+    if custom_min is not None:
+        min_range = custom_min
+    else:
+        min_range = min(data)
+
+    if max_range <= min_range:
+        max_range = min_range + 1
     # draw the temperature plot
 
     stop = len(data) - 1

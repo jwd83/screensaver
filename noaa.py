@@ -121,7 +121,7 @@ class NOAA:
         else:
             return "No Data"
 
-    def current_hourly_forecast(self):
+    def get_current_hourly_forecast(self):
         if self.forecast_hourly_data is not None:
             return self.get_active_periods()[0]
         else:
@@ -178,6 +178,17 @@ class NOAA:
 
         return active_periods
 
+    def get_hourly_rain_chances(self):
+
+        hourly_rain_chances = []
+
+        active_periods = self.get_active_periods()
+
+        for period in active_periods:
+            hourly_rain_chances.append(period["probabilityOfPrecipitation"]["value"])
+
+        return hourly_rain_chances
+
     def get_hourly_temperatures(self):
 
         hourly_temps = []
@@ -203,10 +214,11 @@ if __name__ == "__main__":
     #     )
     # # loop through the periods
 
-    print(noaa.get_hourly_temperatures())
-    print("Active periods")
-    print(noaa.get_active_periods())
+    # print(noaa.get_hourly_temperatures())
+    # print("Active periods")
+    # print(noaa.get_active_periods())
+    print(f"Current Hourly Forecast: {noaa.get_current_hourly_forecast()}")
 
-    print(noaa.get_instantaneous_temperature())
+    print(f"Temp: {noaa.get_instantaneous_temperature()}")
 
     noaa.update()
